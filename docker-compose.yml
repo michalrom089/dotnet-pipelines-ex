@@ -1,0 +1,32 @@
+#docker-compose.yml
+version: '3.8'
+
+services:
+    service1:
+        image: michal.romanowski/service1
+        ports: 
+            - "81:80"
+        build:
+            context: ./
+            dockerfile: Dockerfile
+            args:
+                PROJECT_NAME: Michal.Romanowski.Service1
+
+    service2:
+        image: michal.romanowski/service2
+        ports: 
+            - "82:80"
+        build:
+            context: ./
+            dockerfile: Dockerfile
+            args:
+                PROJECT_NAME: Michal.Romanowski.Service2
+    service3:
+        image: michal.romanowski/service3
+        ports: 
+            - "83:80"
+        build:
+            context: ./
+            dockerfile: Dockerfile
+            args:
+                PROJECT_NAME: Michal.Romanowski.Service3
