@@ -14,9 +14,15 @@ jobs:
     container: mcr.microsoft.com/dotnet/core/sdk:3.1
 
     steps:
-    - script: dotnet test Michal.Romanowski.Service1
-      displayName: 'Test Service1'
-    - script: dotnet test Michal.Romanowski.Service2
-      displayName: 'Test Service2'
-    - script: dotnet test Michal.Romanowski.Service3
-      displayName: 'Test Service3'
+      - script: >-
+          docker build --build-arg PROJECT_NAME=Michal.Romanowski.Service1
+          --target test-env . -t servicestest
+      - script:
+          id=$(docker create servicetest) 
+          docker cp $id:/webapp/out-test/TestResults/testresults.trx ./results1.trx
+          docker rm $id
+      - task: PublishTestResults@2
+        inputs:
+          testRunner: VSTest
+          testResultsFiles: '**/*.trx'
+          failTaskOnFailedTests: true 
