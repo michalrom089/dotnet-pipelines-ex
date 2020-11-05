@@ -1,0 +1,41 @@
+parameters:
+  - name: services
+    type: object
+    default: {}
+  - name: buildConfiguration
+    type: string
+    default: 'Release'
+  - name: dotnetVersion
+    type: string
+    default: '3.1.403'
+
+jobs:
+  - ${{ each service in parameters.services}}:
+      - job: ${{ service.jobName }}
+        displayName: 'Build  ${{ service.projectName }}'
+        variables:
+          IMAGE_NAME: ${{ lower(service.projectName) }}
+        steps:
+          - task: UseDotNet@2
+            displayName: 'Use .NET Core sdk'
+            inputs:
+              packageType: sdk
+              version: ${{ parameters.dotnetVersion }}
+              installationPath: $(Agent.ToolsDirectory)/dotnet
+          - script: dotnet --version
+          - script: |
+              dotnet restore ${{ service.projectName }} -c Release
+              dotnet restore ${{ service.projectName }}.Tests
+            displayName: 'Restore  ${{ service.projectName }} and ${{ service.projectName }}.Tests'
+          - script: |
+              dotnet build ${{ service.projectName }} -c ${{ parameters.buildConfiguration }}
+              dotnet build ${{ service.projectName }}.Tests -c ${{ parameters.buildConfiguration }}
+            displayName: 'Build  ${{ service.projectName }} and ${{ service.projectName }}.Tests'
+          - script: 
+              dotnet test ${{ service.projectName }}.Tests --logger "trx;LogFileName=testresults.trx"  --collect "XPlat Code Coverage"  --results-directory $(Build.ArtifactStagingDirectory)/test-results
+            displayName: 'Test  ${{ service.projectName }}.Tests'
+          - script: 
+              cp -r ${{ service.projectName }}/bin/${{ parameters.buildConfiguration }}/* $(Build.ArtifactStagingDirectory)/
+            displayName: 'Export build results ${{ service.projectName }}'
+          - publish: $(Build.ArtifactStagingDirectory)
+            artifact: ${{ service.artifactName }}
