@@ -1,46 +1,32 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+# Build runtime image
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as build-env
 
-ARG PROJECT_NAME
-
-ENV PROJECT_PATH ./${PROJECT_NAME}
-ENV PROJECT_TESTS_PATH ./${PROJECT_NAME}.Tests
+ARG PROJECT_NAME=Michal.Romanowski.Service1
+ARG BUILD_CONFIGURATION=Release
+ENV PROJECT_DLL="$PROJECT_NAME.dll"
 
 WORKDIR /webapp
 
-# Copy csproj and restore as distinct layers
-COPY ${PROJECT_PATH}/*.csproj ./${PROJECT_PATH}/
-COPY ${PROJECT_TESTS_PATH}/*.csproj ./${PROJECT_TESTS_PATH}/
+#restores
+COPY ${PROJECT_NAME}/*.csproj ./${PROJECT_NAME}/
+RUN dotnet restore ${PROJECT_NAME}
 
-RUN dotnet restore ${PROJECT_PATH}
-RUN dotnet restore ${PROJECT_TESTS_PATH}
+# build and publish
+COPY ${PROJECT_NAME}/* ./${PROJECT_NAME}/
+RUN dotnet publish ${PROJECT_NAME} -c ${BUILD_CONFIGURATION}
 
-# Copy everything else and build
-COPY ${PROJECT_PATH}/* ${PROJECT_PATH}/
-COPY ${PROJECT_TESTS_PATH}/* ${PROJECT_TESTS_PATH}/
-
-RUN dotnet build ${PROJECT_PATH} -c Release -o out
-RUN dotnet build ${PROJECT_TESTS_PATH} -c Release -o out-tests
-
-# Run tests
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as test-env
-
-ARG PROJECT_NAME
-ENV PROJECT_TESTS_DLL="$PROJECT_NAME.Tests.dll"
-
-WORKDIR /webapp/out-test/
-
-COPY --from=build-env /webapp/out-tests .
-RUN dotnet test ${PROJECT_TESTS_DLL} --logger "trx;LogFileName=testresults.trx"
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 as publish-env
 
-ARG PROJECT_NAME
+ARG PROJECT_NAME=Michal.Romanowski.Service1
+ARG BUILD_CONFIGURATION=Release
 ENV PROJECT_DLL="$PROJECT_NAME.dll"
 
 WORKDIR /webapp
 EXPOSE 80
 
-COPY --from=build-env /webapp/out .
+COPY --from=build-env webapp/${PROJECT_NAME}/bin/${BUILD_CONFIGURATION}/netcoreapp3.1/publish/ .
 
 ENTRYPOINT dotnet $PROJECT_DLL
+
