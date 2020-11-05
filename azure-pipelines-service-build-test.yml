@@ -8,6 +8,9 @@ parameters:
   - name: dotnetVersion
     type: string
     default: "3.1.403"
+  - name: cakeVersion
+    type: string
+    default: "0.38.5"
 
 jobs:
   - ${{ each service in parameters.services}}:
@@ -22,13 +25,13 @@ jobs:
               packageType: sdk
               version: ${{ parameters.dotnetVersion }}
               installationPath: $(Agent.ToolsDirectory)/dotnet
-          - script: dotnet tool install \
-              --global Cake.Tool \
+          - script: dotnet tool install
+              --global Cake.Tool
               --version ${{ parameters.cakeVersion }}
             displayName: "Install cake"
-          - script: dotnet cake build.cake \
-              --projectName=${{ service.projectName}} \
-              --target=BuildAndTest \
+          - script: dotnet cake build.cake
+              --projectName=${{ service.projectName}}
+              --target=BuildAndTest
               --testOutputPath=$(Build.ArtifactStagingDirectory)/test-results
             displayName: "Build  ${{ service.projectName }} and ${{ service.projectName }}.Tests"
           - publish: $(Build.ArtifactStagingDirectory)
