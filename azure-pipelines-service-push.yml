@@ -3,7 +3,7 @@ parameters:
     type: object
     default: []
   - name: condition
-    type: boolean
+    type: object
     default: false
   - name: dependsOn
     type: object
