@@ -1,28 +1,66 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Multi service pipeline
 
 trigger:
-- master
+  - master
 
 pool:
   vmImage: 'ubuntu-latest'
 
-jobs:
-  - job: TestSolutions
-    container: mcr.microsoft.com/dotnet/core/sdk:3.1
+parameters:
+  - name: 'services'
+    type: object
+    default:
+      - projectName: 'Michal.Romanowski.Service1'
+        jobName: 'service1'
+        artifactName: 'artifact1'
+      - projectName: 'Michal.Romanowski.Service2'
+        jobName: 'service2'
+        artifactName: 'artifact2'
+      - projectName: 'Michal.Romanowski.Service3'
+        jobName: 'service3'
+        artifactName: 'artifact3'
+  - name: 'dockerId'
+    type: string
+    default: '7584323'
+  - name: 'dockerRegistryEndpoint'
+    type: string
+    default: 'docker.hub/7584323'
 
+jobs:
+  - template: azure-pipelines-service-build-test.yml
+    parameters:
+      services: ${{ parameters.services }}
+  - job: publish_test_results
+    displayName: 'Publish Test Results'
+    dependsOn: ${{ parameters.services.*.jobName }}
     steps:
-      - script: >-
-          docker build --build-arg PROJECT_NAME=Michal.Romanowski.Service1
-          --target test-env . -t servicestest
-      - script:
-          id=$(docker create servicetest) 
-          docker cp $id:/webapp/out-test/TestResults/testresults.trx ./results1.trx
-          docker rm $id
+      - ${{ each service in parameters.services}}:
+          - download: current
+            artifact: ${{ service.artifactName }}
+      - script: |
+          ls $(Pipeline.Workspace)/artifact1/test-results
+          ls $(Pipeline.Workspace)/artifact2/test-results
+          ls $(Pipeline.Workspace)/artifact3/test-results
+        displayName: "Fix coverage report paths"
+      - task: reportgenerator@4
+        inputs:
+          reports: '$(Pipeline.Workspace)/artifact*/test-results/**/*.cobertura.xml'
+          targetdir: '$(Pipeline.Workspace)/CoverageResults'
+      - task: PublishCodeCoverageResults@1
+        displayName: 'Publish code coverage'
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: '$(Pipeline.Workspace)/CoverageResults/Cobertura.xml'
       - task: PublishTestResults@2
         inputs:
           testRunner: VSTest
-          testResultsFiles: '**/*.trx'
-          failTaskOnFailedTests: true 
+          testResultsFiles: '$(Pipeline.Workspace)/artifact*/test-results/testresults.trx'
+          failTaskOnFailedTests: true
+  - template: azure-pipelines-service-push.yml
+    parameters:
+      services: ${{ parameters.services }}
+      dockerRegistryEndpoint: ${{ parameters.dockerRegistryEndpoint }}
+      dockerId: ${{ parameters.dockerId }}
+      condition: true
+      dependsOn:
+        - publish_test_results
