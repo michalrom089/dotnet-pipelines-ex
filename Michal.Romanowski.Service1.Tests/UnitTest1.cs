@@ -8,7 +8,7 @@ namespace Michal.Romanowski.Service1.Tests
         [Fact]
         public void Test1()
         {
-
+            Assert.True(false);
         }
     }
 }
