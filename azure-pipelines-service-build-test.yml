@@ -35,4 +35,5 @@ jobs:
               --testOutputPath=$(Build.ArtifactStagingDirectory)/test-results
             displayName: "Build  ${{ service.projectName }} and ${{ service.projectName }}.Tests"
           - publish: $(Build.ArtifactStagingDirectory)
+            condition: always()
             artifact: ${{ service.artifactName }}
