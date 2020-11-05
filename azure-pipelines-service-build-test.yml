@@ -34,8 +34,5 @@ jobs:
           - script: 
               dotnet test ${{ service.projectName }}.Tests --logger "trx;LogFileName=testresults.trx"  --collect "XPlat Code Coverage"  --results-directory $(Build.ArtifactStagingDirectory)/test-results
             displayName: 'Test  ${{ service.projectName }}.Tests'
-          - script: 
-              cp -r ${{ service.projectName }}/bin/${{ parameters.buildConfiguration }}/* $(Build.ArtifactStagingDirectory)/
-            displayName: 'Export build results ${{ service.projectName }}'
           - publish: $(Build.ArtifactStagingDirectory)
             artifact: ${{ service.artifactName }}

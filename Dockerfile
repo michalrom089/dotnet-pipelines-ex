@@ -1,7 +1,7 @@
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as build-env
 
-ARG PROJECT_NAME=Michal.Romanowski.Service1
+ARG PROJECT_NAME
 ARG BUILD_CONFIGURATION=Release
 ENV PROJECT_DLL="$PROJECT_NAME.dll"
 
@@ -19,7 +19,7 @@ RUN dotnet publish ${PROJECT_NAME} -c ${BUILD_CONFIGURATION}
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 as publish-env
 
-ARG PROJECT_NAME=Michal.Romanowski.Service1
+ARG PROJECT_NAME
 ARG BUILD_CONFIGURATION=Release
 ENV PROJECT_DLL="$PROJECT_NAME.dll"
 
