@@ -26,8 +26,9 @@ jobs:
         steps:
           - download: current
             artifact: ${{ service.artifactName }}
-          - script: |
-              docker build --build-arg PROJECT_NAME=${{ service.projectName }} . -t '$(DOCKER_ID)/$(IMAGE_NAME):$(Build.BuildId)'
+          - script:  docker build \
+              --build-arg PROJECT_NAME=${{ service.projectName }} \
+              -t '$(DOCKER_ID)/$(IMAGE_NAME):$(Build.BuildId)' . 
             displayName: "Build  ${{ service.projectName }}"
           - task: Docker@2
             inputs:

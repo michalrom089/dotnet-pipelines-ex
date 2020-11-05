@@ -37,7 +37,6 @@ jobs:
       - ${{ each service in parameters.services}}:
           - download: current
             artifact: ${{ service.artifactName }}
-        displayName: "Fix coverage report paths"
       - task: reportgenerator@4
         inputs:
           reports: "$(Pipeline.Workspace)/artifact*/test-results/**/*.cobertura.xml"
