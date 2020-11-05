@@ -1,0 +1,37 @@
+parameters:
+  - name: services
+    type: object
+    default: []
+  - name: condition
+    type: boolean
+    default: false
+  - name: dependsOn
+    type: object
+    default: []
+  - name: dockerRegistryEndpoint
+    type: string
+  - name: dockerId
+    type: string
+
+jobs:
+  - ${{ each service in parameters.services}}:
+      - job: ${{ service.jobName }}__push
+        displayName: 'Push  ${{ service.projectName }} to DockerHub'
+        condition: ${{ parameters.condition }}
+        dependsOn: ${{ parameters.dependsOn }}
+        variables:
+          IMAGE_NAME: ${{ lower(service.projectName) }}
+          IMAGE_TAG: $(Build.BuildId)
+          DOCKER_ID: ${{ parameters.dockerId }}
+        steps:
+          - download: current
+            artifact: ${{ service.artifactName }}
+          - script: |
+              docker build --build-arg PROJECT_NAME=${{ service.projectName }} . -t '$(DOCKER_ID)/$(IMAGE_NAME):$(Build.BuildId)'
+            displayName: 'Build  ${{ service.projectName }}'
+          - task: Docker@2
+            inputs:
+              containerRegistry: ${{ parameters.dockerRegistryEndpoint }}
+              repository: '$(DOCKER_ID)/$(IMAGE_NAME)'
+              command: 'push'
+              tags: $(Build.BuildId)
