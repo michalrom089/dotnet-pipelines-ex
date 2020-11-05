@@ -4,57 +4,53 @@ trigger:
   - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: "ubuntu-latest"
 
 parameters:
-  - name: 'services'
+  - name: "services"
     type: object
     default:
-      - projectName: 'Michal.Romanowski.Service1'
-        jobName: 'service1'
-        artifactName: 'artifact1'
-      - projectName: 'Michal.Romanowski.Service2'
-        jobName: 'service2'
-        artifactName: 'artifact2'
-      - projectName: 'Michal.Romanowski.Service3'
-        jobName: 'service3'
-        artifactName: 'artifact3'
-  - name: 'dockerId'
+      - projectName: "Michal.Romanowski.Service1"
+        jobName: "service1"
+        artifactName: "artifact1"
+      - projectName: "Michal.Romanowski.Service2"
+        jobName: "service2"
+        artifactName: "artifact2"
+      - projectName: "Michal.Romanowski.Service3"
+        jobName: "service3"
+        artifactName: "artifact3"
+  - name: "dockerId"
     type: string
-    default: '7584323'
-  - name: 'dockerRegistryEndpoint'
+    default: "7584323"
+  - name: "dockerRegistryEndpoint"
     type: string
-    default: 'docker.hub/7584323'
+    default: "docker.hub/7584323"
 
 jobs:
   - template: azure-pipelines-service-build-test.yml
     parameters:
       services: ${{ parameters.services }}
   - job: publish_test_results
-    displayName: 'Publish Test Results'
+    displayName: "Publish Test Results"
     dependsOn: ${{ parameters.services.*.jobName }}
     steps:
       - ${{ each service in parameters.services}}:
           - download: current
             artifact: ${{ service.artifactName }}
-      - script: |
-          ls $(Pipeline.Workspace)/artifact1/test-results
-          ls $(Pipeline.Workspace)/artifact2/test-results
-          ls $(Pipeline.Workspace)/artifact3/test-results
         displayName: "Fix coverage report paths"
       - task: reportgenerator@4
         inputs:
-          reports: '$(Pipeline.Workspace)/artifact*/test-results/**/*.cobertura.xml'
-          targetdir: '$(Pipeline.Workspace)/CoverageResults'
+          reports: "$(Pipeline.Workspace)/artifact*/test-results/**/*.cobertura.xml"
+          targetdir: "$(Pipeline.Workspace)/CoverageResults"
       - task: PublishCodeCoverageResults@1
-        displayName: 'Publish code coverage'
+        displayName: "Publish code coverage"
         inputs:
           codeCoverageTool: Cobertura
-          summaryFileLocation: '$(Pipeline.Workspace)/CoverageResults/Cobertura.xml'
+          summaryFileLocation: "$(Pipeline.Workspace)/CoverageResults/Cobertura.xml"
       - task: PublishTestResults@2
         inputs:
           testRunner: VSTest
-          testResultsFiles: '$(Pipeline.Workspace)/artifact*/test-results/testresults.trx'
+          testResultsFiles: "$(Pipeline.Workspace)/artifact*/test-results/testresults.trx"
           failTaskOnFailedTests: true
   - template: azure-pipelines-service-push.yml
     parameters:

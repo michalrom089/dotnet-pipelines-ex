@@ -16,7 +16,7 @@ parameters:
 jobs:
   - ${{ each service in parameters.services}}:
       - job: ${{ service.jobName }}__push
-        displayName: 'Push  ${{ service.projectName }} to DockerHub'
+        displayName: "Push  ${{ service.projectName }} to DockerHub"
         condition: ${{ parameters.condition }}
         dependsOn: ${{ parameters.dependsOn }}
         variables:
@@ -28,10 +28,10 @@ jobs:
             artifact: ${{ service.artifactName }}
           - script: |
               docker build --build-arg PROJECT_NAME=${{ service.projectName }} . -t '$(DOCKER_ID)/$(IMAGE_NAME):$(Build.BuildId)'
-            displayName: 'Build  ${{ service.projectName }}'
+            displayName: "Build  ${{ service.projectName }}"
           - task: Docker@2
             inputs:
               containerRegistry: ${{ parameters.dockerRegistryEndpoint }}
-              repository: '$(DOCKER_ID)/$(IMAGE_NAME)'
-              command: 'push'
+              repository: "$(DOCKER_ID)/$(IMAGE_NAME)"
+              command: "push"
               tags: $(Build.BuildId)
