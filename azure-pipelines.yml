@@ -59,6 +59,6 @@ jobs:
       services: ${{ parameters.services }}
       dockerRegistryEndpoint: ${{ parameters.dockerRegistryEndpoint }}
       dockerId: ${{ parameters.dockerId }}
-      condition: true
+      condition: and(suceeded(), eq($(Build.SourceBranch), 'refs/heads/master'))
       dependsOn:
         - publish_test_results
