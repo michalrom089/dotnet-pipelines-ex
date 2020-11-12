@@ -4,6 +4,7 @@ Contains multiple dotnet *hello-world* services and test projects. The CI/CD imp
 
 Project structure:
 
+
 ```bash
 ├───Michal.Romanowski.Service1/
 ├───Michal.Romanowski.Service1.Tests/
